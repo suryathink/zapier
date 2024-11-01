@@ -6,6 +6,7 @@ const client = new PrismaClient();
 const app = express();
 
 app.post("/hooks/catch/:userId/:zapId", async (req, res) => {
+  // here we must have that password logic, so that only verified users should hit this endpoint, ignore for now
   const userId = req.params.userId;
   const zapId = req.params.zapId;
   const body = req.body;
