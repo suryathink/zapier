@@ -5,6 +5,8 @@ const client = new PrismaClient();
 
 const app = express();
 
+app.use(express.json());
+
 app.post("/hooks/catch/:userId/:zapId", async (req, res) => {
   // here we must have that password logic, so that only verified users should hit this endpoint, ignore for now
   const userId = req.params.userId;
@@ -28,8 +30,14 @@ app.post("/hooks/catch/:userId/:zapId", async (req, res) => {
     });
   });
 
+  res.json({
+    message: "webhook received",
+  });
+
   // push it to a queue (kafka/redis)
   //   kafkaPublisher.publish({
   //     zapId
   //   })
 });
+
+app.listen(3000);
