@@ -69,7 +69,7 @@ async function main() {
         {
           topic: TOPIC_NAME,
           partition: partition,
-          offset: message.offset + 1,
+          offset: (parseInt(message.offset) + 1).toString(),
         },
       ]);
     },
