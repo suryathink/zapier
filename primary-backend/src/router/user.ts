@@ -1,14 +1,15 @@
 import { Router, Request, Response } from "express";
+import jwt from "jsonwebtoken";
 import { authMiddleware } from "../middleware";
-import { SignupSchema } from "../types";
+import { SignupSchema, SignInSchema } from "../types";
 import { prismaClient } from "../db";
+import { JWT_PASSWORD } from "../config";
 
 const router = Router();
 
 router.post("/signup", async (req: Request, res: Response): Promise<void> => {
   const body = req.body;
   const parsedData = SignupSchema.safeParse(body);
-
   if (!parsedData.success) {
     res.status(411).json({
       message: "Incorrect inputs",
@@ -43,11 +44,62 @@ router.post("/signup", async (req: Request, res: Response): Promise<void> => {
   return;
 });
 
-router.post("/signin", (req, res) => {
-  console.log("signin handler");
+router.post("/signin", async (req: Request, res: Response) => {
+  const body = req.body;
+  const parsedData = SignInSchema.safeParse(body);
+
+  if (!parsedData.success) {
+    res.status(411).json({
+      message: "Incorrect inputs",
+    });
+    return;
+  }
+
+  const user = await prismaClient.user.findFirst({
+    where: {
+      email: parsedData.data.username,
+      password: parsedData.data.password,
+    },
+  });
+
+  if (!user) {
+    res.status(403).json({
+      message: "Credentials are incorrect",
+    });
+    return;
+  }
+  // todo sign the jwt
+  const token = jwt.sign(
+    {
+      id: user.id,
+    },
+    process.env.JWT_PASSWORD as string
+  );
+
+  res.json({
+    token,
+  });
+  return;
 });
-router.get("/user", authMiddleware, (req, res) => {
-  console.log("signin handler");
+
+router.get("/", authMiddleware, async (req: Request, res: Response) => {
+  // TODO: Fix the type
+  // @ts-ignore
+  const id = req.id;
+  const user = await prismaClient.user.findFirst({
+    where: {
+      id,
+    },
+    select: {
+      name: true,
+      email: true,
+    },
+  });
+
+  res.json({
+    user,
+  });
+  return;
 });
 
 export const userRouter = router;
